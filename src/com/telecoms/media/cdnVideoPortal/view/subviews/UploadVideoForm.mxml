@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="400" height="300">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import com.telecoms.media.cdnVideoPortal.model.PortalModelLocator;
+			
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			public var model:PortalModelLocator = PortalModelLocator.getInstance();
+			private var folderDetails:Array = new Array;
+			
+			private function convertXMLtoArrayCollection(xmlData:XML):ArrayCollection{
+				for(var i:int; i<xmlData.cdn.length();i++){
+					var current:XML = xmlData.cdn[i];
+					var site:String = current.attribute("website");
+					var folder:String = current.attribute("folder");
+					
+					folderDetails.push({label:site, folderName:folder});
+				}
+				var folderLocations:ArrayCollection = new ArrayCollection(folderDetails);
+
+				return folderLocations;
+			}
+			private function changeTargetFolder(indexNumber:int):void{
+				model.folderName = folderDetails[indexNumber].folderName;
+				trace(model.folderName);
+			} 
+		]]>
+	</fx:Script>
+	<mx:VBox paddingTop="10" paddingRight="10" paddingBottom="10" paddingLeft="10">
+		<s:ComboBox id="selectFolder" dataProvider="{convertXMLtoArrayCollection(model.folderData)}" width="200" />
+		<s:Button label="Select Folder" click="changeTargetFolder(selectFolder.selectedIndex)" />
+	</mx:VBox>
+</s:Group>

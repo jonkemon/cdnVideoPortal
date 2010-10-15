@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   xmlns:view="com.telecoms.media.cdnVideoPortal.view.*"
+					   minWidth="800"
+					   minHeight="480" 
+					   creationComplete="home.loadXML()"
+					   initialize="onInit()"
+					   >
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<control:PTController xmlns:control="com.telecoms.media.cdnVideoPortal.control.*"/>
+		<business:Services xmlns:business="com.telecoms.media.cdnVideoPortal.business.*"/>
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			// Import the debugger
+			import nl.demonsters.debugger.MonsterDebugger;
+			
+			// Variable to hold the debugger
+			private var debugger:MonsterDebugger;
+			
+			private function onInit():void
+			{
+				// Init the debugger
+				debugger = new MonsterDebugger(this);
+				
+				// Send a simple trace
+				MonsterDebugger.trace(this, "Hello World!");
+			}
+		]]>
+	</fx:Script>
+	
+	<view:home id="home" backgroundColor="#9e3711" dropShadowVisible="true"/>
+</s:WindowedApplication>
