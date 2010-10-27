@@ -10,11 +10,18 @@
 			import com.telecoms.media.cdnVideoPortal.model.PortalModelLocator;
 			
 			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
 			
 			[Bindable]
 			public var model:PortalModelLocator = PortalModelLocator.getInstance();
 			private var folderDetails:Array = new Array;
+			private var fileReference:FileReference;
+			private var fileReferenceList:FileReferenceList;
+			private var urlRequest:URLRequest;
+			private var serverSideScript:String = "http://www.fifthmorrison.com/cdn/php/upload.php";
+			// Informa's CDN script is http://media2.telecoms.com/cdn/videowizard/upload.php
 			
+			// Populate the Drop Down Menu with Event Names so that user can select which folder to upload to
 			private function convertXMLtoArrayCollection(xmlData:XML):ArrayCollection{
 				for(var i:int; i<xmlData.cdn.length();i++){
 					var current:XML = xmlData.cdn[i];
@@ -27,14 +34,109 @@
 
 				return folderLocations;
 			}
-			private function changeTargetFolder(indexNumber:int):void{
+			// Find file on local system
+			private function openBrowseFileDialogue():void 
+			{
+				// Set server details and select file
+				urlRequest = new URLRequest(serverSideScript);
+				fileReferenceList = new FileReferenceList();
+				fileReferenceList.addEventListener(Event.SELECT, fileSelectedHandler);
+				
+				// Establish acceptable file types and store them in an array then search for those types
+				var imageTypes:FileFilter = new FileFilter("Videos (*.f4v, *.flv, *.mov)", "*.f4v; *.flv; *.mov");
+				var allTypes:Array = new Array(imageTypes);
+				fileReferenceList.browse(allTypes);
+			}
+			// function retrieves the file destination selected within the OS browse window
+			private function fileSelectedHandler(event:Event):void 
+			{
+				var fileReferenceList:FileReferenceList = FileReferenceList(event.target);
+				var fileList:Array = fileReferenceList.fileList;
+				fileReference = FileReference(fileList[0]);
+			}
+			// Confirm Uploading of the files
+			private function uploadFileHandler(indexNumber:int):void
+			{
+				if(indexNumber<1){
+					Alert.show("Please Select an event from the Drop-Down");
+				}
+				else{	
 				model.folderName = folderDetails[indexNumber].folderName;
+				
+				var folderLocationXML:XML = model.folderName as XML;
+				var variables:URLVariables = new URLVariables(folderLocationXML);
+				var loader:URLLoader = new URLLoader();
+				
+				variables.folder = model.folderName;
 				trace(model.folderName);
-			} 
+				urlRequest.data = variables;
+				urlRequest.method = URLRequestMethod.POST;
+				loader.dataFormat = URLLoaderDataFormat.TEXT;
+				
+				loader.load(urlRequest);
+				
+				// set up responses and upload the file to the server side script
+				fileReference.addEventListener(Event.COMPLETE, uploadCompleteHandler);
+				fileReference.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityError);
+				fileReference.addEventListener(ProgressEvent.PROGRESS, progressUpdate);
+				fileReference.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, completeData);
+				fileReference.addEventListener(IOErrorEvent.IO_ERROR, ioError);
+				fileReference.addEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, httpSuccess);
+				fileReference.addEventListener(HTTPStatusEvent.HTTP_STATUS, httpError);
+				fileReference.upload(urlRequest);
+				}
+			}
+			
+			private function uploadCompleteHandler(event:Event):void 
+			{
+				//_fileStatus.uploadStatus = "File Uploaded";
+				//trace(_fileStatus.uploadStatus);
+				trace('Uploaded Complete');
+			}	
+			private function securityError(event:SecurityErrorEvent):void 
+			{
+				//_fileStatus.uploadStatus = "File Uploaded";
+				//trace(_fileStatus.uploadStatus);
+				trace('Security Error has Occurred!');
+			}
+			private function progressUpdate(event:ProgressEvent):void 
+			{
+				//_fileStatus.uploadStatus = "File Uploaded";
+				//trace(_fileStatus.uploadStatus);
+				var file:FileReference = FileReference(event.target);
+				trace("progressHandler name=" + file.name + " bytesLoaded=" + event.bytesLoaded + " bytesTotal=" + event.bytesTotal);
+				var uploadPercentage:int = event.bytesLoaded/event.bytesTotal * 100;
+				trace(uploadPercentage.toFixed(1) + '%');
+			}
+			private function completeData(event:DataEvent):void 
+			{
+				//_fileStatus.uploadStatus = "File Uploaded";
+				//trace(_fileStatus.uploadStatus);
+				trace('Data Received!'+event.data);
+			}
+			private function ioError(event:IOErrorEvent):void 
+			{
+				//_fileStatus.uploadStatus = "File Uploaded";
+				//trace(_fileStatus.uploadStatus);
+				trace('Input/Output Error');
+			}
+			private function httpSuccess(event:HTTPStatusEvent):void 
+			{
+				//_fileStatus.uploadStatus = "File Uploaded";
+				//trace(_fileStatus.uploadStatus);
+				trace('Http Success, URL+Header returned from server');
+			}
+			private function httpError(event:HTTPStatusEvent):void 
+			{
+				//_fileStatus.uploadStatus = "File Uploaded";
+				//trace(_fileStatus.uploadStatus);
+				trace('Http Failure');
+			}
 		]]>
 	</fx:Script>
 	<mx:VBox paddingTop="10" paddingRight="10" paddingBottom="10" paddingLeft="10">
 		<s:ComboBox id="selectFolder" dataProvider="{convertXMLtoArrayCollection(model.folderData)}" width="200" />
-		<s:Button label="Select Folder" click="changeTargetFolder(selectFolder.selectedIndex)" />
+		<s:Button click="openBrowseFileDialogue();" label="Browse File"/>
+		<s:Button click="uploadFileHandler(selectFolder.selectedIndex);" label="Upload File"/>
 	</mx:VBox>
 </s:Group>

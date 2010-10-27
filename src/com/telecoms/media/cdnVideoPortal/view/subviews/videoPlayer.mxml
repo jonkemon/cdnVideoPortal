@@ -6,5 +6,5 @@
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 		<s:VerticalLayout/>
 	</fx:Declarations>
-		<s:VideoPlayer width="400" height="300" source="http://cdn.informa.com.lg1x8.simplecdn.net/iir/Christo_Kriek,_Programme_Manager,_SASOL_Group_Shared_Services.mov"/>
+		<s:VideoPlayer width="400" height="300" autoPlay="false" source="http://cdn.informa.com.lg1x8.simplecdn.net/iir/Christo_Kriek,_Programme_Manager,_SASOL_Group_Shared_Services.mov"/>
 </s:Group>
