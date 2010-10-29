@@ -18,8 +18,9 @@
 			private var fileReference:FileReference;
 			private var fileReferenceList:FileReferenceList;
 			private var urlRequest:URLRequest;
-			private var serverSideScript:String = "http://www.fifthmorrison.com/cdn/php/upload.php";
+			private var serverSideScript:String = "http://media2.telecoms.com/cdn/videowizard/upload.php";
 			// Informa's CDN script is http://media2.telecoms.com/cdn/videowizard/upload.php
+			// Test Server is http://www.fifthmorrison.com/cdn/php/upload.php
 			
 			// Populate the Drop Down Menu with Event Names so that user can select which folder to upload to
 			private function convertXMLtoArrayCollection(xmlData:XML):ArrayCollection{
@@ -112,7 +113,13 @@
 			{
 				//_fileStatus.uploadStatus = "File Uploaded";
 				//trace(_fileStatus.uploadStatus);
-				trace('Data Received!'+event.data);
+				
+				//trace('Data Received!'+event.data.toString());
+				
+				var result:XML = new XML(event.data);
+				//trace('RESULT: ' + result.toString());
+				trace('STATUS: ' + result.status);
+				trace('MESSAGE: '+ result.message);
 			}
 			private function ioError(event:IOErrorEvent):void 
 			{

@@ -32,7 +32,7 @@
 			<s:Button label="Code Generator" click="navigationStack.selectedChild=generateCode"/>
 		</mx:HBox>
 		
-		<mx:ViewStack id="navigationStack" height="400" width="780" backgroundColor="#ffffff" borderColor="#000000" dropShadowVisible="true">
+		<subviews:CubeStack id="navigationStack" height="400" width="780" backgroundColor="#ffffff" borderColor="#000000" dropShadowVisible="true">
 			<mx:VBox id="player" width="100%" height="100%" paddingTop="10" paddingRight="10" paddingBottom="10" paddingLeft="10" verticalGap="0">
 				<subviews:videoPlayer/>
 			</mx:VBox>
@@ -42,7 +42,7 @@
 			<mx:VBox id="generateCode" width="100%" height="100%" paddingTop="10" paddingRight="10" paddingBottom="10" paddingLeft="10">
 				<subviews:videoPlayer/>
 			</mx:VBox>
-		</mx:ViewStack>
+		</subviews:CubeStack>
 	</mx:VBox>
 
 </mx:Canvas>

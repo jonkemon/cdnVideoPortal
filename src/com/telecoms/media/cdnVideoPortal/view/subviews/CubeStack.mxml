@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:ViewStack xmlns:mx="library://ns.adobe.com/flex/mx"
+			  xmlns:s="library://ns.adobe.com/flex/spark"
+			  xmlns:fx="http://ns.adobe.com/mxml/2009"
+			  xmlns:mxeffects="com.adobe.ac.mxeffects.*" 
+			  creationComplete="initAp()">
+	
+	<fx:Script>
+		<![CDATA[
+			
+			import mx.core.Container;
+			import com.adobe.ac.mxeffects.*;
+			import mx.core.UIComponent;
+			import flash.filters.BlurFilter;
+			
+			[Bindable]
+			public var blurFilter:BlurFilter = new BlurFilter();
+			
+			[Bindable]
+			public var animationDuration:Number = 1000;
+			private var direction:String;
+			
+		
+			private function initAp():void{
+				
+			}
+			
+			private function removeEffects():void{
+				var c:Array = this.getChildren();
+				for(var i:int = 0; i < c.length; i++){
+					var ui:UIComponent = this.getChildAt(c[i]) as UIComponent;
+						ui.setStyle("hideEffect",{} );
+						ui.setStyle("showEffect",{});
+				}	
+			}
+			
+			
+			
+			public function selection(id:Container):void{
+			
+				//first, get index of current child
+				if( this.selectedChild == id) return;
+				var currentIndex:int = this.selectedIndex;
+				//then get the index of the new Child
+				var i:int = this.getChildIndex(id);
+				//find out which direction to flip based on what's shorter
+				var forwardCount:int = i - currentIndex;
+				if(forwardCount < 0) forwardCount = (this.getChildren().length - currentIndex) + i;
+				var backwardCount:int = currentIndex - i;
+				if(backwardCount < 0) backwardCount = currentIndex + (this.getChildren().length - i);
+				
+				
+				var startSiblingsArray:Array = new Array();
+				var endSiblingsArray:Array = new Array();
+				if(forwardCount < backwardCount){
+					
+					var forwardIndex:int = currentIndex + 1;
+					for(var j:int = 0; j < forwardCount; j++){
+						if(forwardIndex >= this.getChildren().length) forwardIndex = 0;
+						startSiblingsArray.push(this.getChildAt(forwardIndex));
+						forwardIndex++;
+					}
+					forwardIndex = currentIndex;
+					for(var k:int = 0; k < forwardCount; k++){
+						if(forwardIndex >= this.getChildren().length) forwardIndex = 0;
+						endSiblingsArray.push(this.getChildAt(forwardIndex));
+						forwardIndex++;	
+					}
+					direction = "FORWARD";
+					
+					forward3(id, startSiblingsArray, endSiblingsArray);
+				}else{
+					
+					var backwardIndex:int = currentIndex;
+					for(var l:int = 0; j < backwardCount; l++){
+						if(backwardIndex < 0 ) backwardIndex = this.getChildren().length - 1;
+						startSiblingsArray.push(this.getChildAt(backwardIndex));
+						backwardIndex--;
+					}
+					backwardIndex = currentIndex - 1;
+					for(var m:int = 0; m < backwardCount; m++){
+						if(backwardIndex < 0) backwardIndex = this.getChildren().length - 1;
+						endSiblingsArray.push(this.getChildAt(backwardIndex));
+						backwardIndex--;	
+					}
+					direction = "BACK";
+					
+					back3(id, startSiblingsArray, endSiblingsArray);
+				}
+				
+				
+				
+				
+			}
+			
+			public function forward3(newContainer:Container, startSibs:Array, endSibs:Array ):void{
+				
+				trace("FORWARD");
+				//get current child
+				var currentChild:Container = this.selectedChild as Container;
+				
+				//set up animation properties -- this works after trial and error
+				// it seems backwards to me compared to the styles set below.
+				//need to figure this out.
+				flipBack.target = currentChild;
+				//flipBack.siblings = [currentChild, nextChild];
+				flipBack.siblings = startSibs;
+				flipBack.duration = animationDuration;
+				flipBack.blur = blurFilter;
+				flipForward.target = newContainer;
+				//flipForward.siblings = [nextChild, nextNextChild];
+				flipForward.siblings = endSibs;
+				flipForward.duration = animationDuration;
+				flipForward.blur = blurFilter;
+				//as it turns out, you don't have to assign a hide/show effect to every element
+				//in the chain, just the one that's initially vanishing and the one that's going to
+				//show up at the end. I remove the effects from the rest -- probably not the most
+				//efficient (or even proper) way of making sure this works, but it's the only
+				//way I managed to get it do function properly. Go figure.
+				removeEffects();
+				currentChild.setStyle("showEffect", {});
+				newContainer.setStyle("hideEffect", {});
+				//add new effects listeners
+				currentChild.setStyle("hideEffect", flipBack);
+				newContainer.setStyle("showEffect", flipForward);
+				
+				
+				this.selectedChild = newContainer;
+				
+			}
+			
+			public function back3(newContainer:Container, startSibs:Array, endSibs:Array ):void{
+				
+				trace("BACKWARDS");
+				//get current child
+				var currentChild:Container = this.selectedChild as Container;
+				//need to figure this out.
+				flipForward.target = currentChild;
+				
+				flipForward.siblings = endSibs;
+				flipForward.duration = animationDuration;
+				flipForward.blur = blurFilter;
+				flipBack.target = newContainer;
+				flipBack.blur = blurFilter;
+				flipBack.siblings = startSibs;
+				flipBack.duration = animationDuration;
+			
+				removeEffects();
+				currentChild.setStyle("showEffect", {});
+				newContainer.setStyle("hideEffect", {});
+				newContainer.setStyle("showEffect", flipBack);
+				currentChild.setStyle("hideEffect", flipForward);
+				this.selectedChild = newContainer;
+				
+			}
+			
+			
+			public function forward(e:Event = null):void{
+			
+				if(flipForward.isPlaying || flipBack.isPlaying){
+					
+					return;
+				} 
+				//get current child
+				var currentChild:Container = this.selectedChild as Container;
+				//get index of next child, be sure to account for the posibility that it is at the beginning
+				var nextIndex:int = this.selectedIndex + 1;
+				if(nextIndex >= this.getChildren().length) nextIndex = 0;
+				//get child at the next index
+				var nextChild:Container = this.getChildAt(nextIndex) as Container;
+				//set up animation properties -- this works after trial and error
+				// it seems backwards to me compared to the styles set below.
+				//need to figure this out.
+				flipForward.target = currentChild;
+				flipForward.siblings = [currentChild];
+				flipForward.duration = animationDuration;
+				flipForward.blur = blurFilter;
+				flipBack.target = nextChild;
+				flipBack.siblings = [nextChild];
+				flipBack.duration = animationDuration;
+				flipBack.blur = blurFilter;
+				//remove old effects listeners
+				currentChild.setStyle("showEffect", {});
+				nextChild.setStyle("hideEffect", {});
+				//add new effects listeners
+				currentChild.setStyle("hideEffect", flipBack);
+				nextChild.setStyle("showEffect", flipForward);
+				
+				
+				this.selectedChild = nextChild;
+				
+			}
+			
+			public function back(e:Event = null):void{
+				trace("Going Backward");
+				if(flipForward.isPlaying || flipBack.isPlaying) return;
+				//get current child
+				var currentChild:Container = this.selectedChild as Container;
+				//get index of next child, be sure to account for the posibility that it is at the beginning
+				var previousIndex:int = this.selectedIndex - 1;
+				if(previousIndex < 0) previousIndex = this.getChildren().length - 1;
+				//get child at the next index
+				var previousChild:Container = this.getChildAt(previousIndex) as Container;
+				
+				//set up animation properties
+				flipForward.target = previousChild;
+				flipForward.siblings = [previousChild];
+				flipForward.duration = animationDuration;
+				flipForward.blur = blurFilter;
+				flipBack.target = currentChild;
+				flipBack.siblings = [currentChild];
+				flipBack.duration = animationDuration;
+				flipBack.blur = blurFilter;
+				currentChild.setStyle("showEffect", {});
+				previousChild.setStyle("hideEffect", {});
+				previousChild.setStyle("showEffect", flipBack);
+				currentChild.setStyle("hideEffect", flipForward);
+				
+				this.selectedChild = previousChild;
+				
+			}
+			
+		]]>
+	</fx:Script>
+
+		<fx:Declarations>
+			<mxeffects:CubeRotate 
+				id="flipForward" siblings="[]" blur="{blurFilter}"
+				direction="RIGHT" duration="{animationDuration}"/>
+			<mxeffects:CubeRotate 
+				id="flipBack" siblings="[]" blur="{blurFilter}" 
+				direction="LEFT" duration="{animationDuration}"/>
+		</fx:Declarations>
+	
+</mx:ViewStack>
